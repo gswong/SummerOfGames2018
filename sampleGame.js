@@ -26,6 +26,15 @@ player.scale = 0.7;
 // - top, bottom, left and right that prevent character from moving off screen
 createEdgeSprites();
 
+
+// Arrows (these should always be drawn last so that they aren't hidden by anything
+var left = createSprite(20, 375, 30, 20);
+var right = createSprite(90, 375, 30, 20);
+var up = createSprite(55, 360, 30, 20);
+left.setAnimation('left');
+right.setAnimation('right');
+up.setAnimation('up');
+
 // portal 
 // this is tricky conceptually - create and return
 // note: for proper interaction need to set collider to circle
@@ -90,6 +99,7 @@ function draw() {
   }
   // Uncomment 
   camera.x = player.x;
+  moveArrows();
 }
 
 // Functions
@@ -117,17 +127,30 @@ function playerGravity() {
 }
 
 function playerControl(){
-  if (keyDown("left") && player.velocityX > -10) {
+  var goLeft = 
+    keyDown('left') || mouseIsOver(left);
+  var goRight = 
+    keyDown('right') || mouseIsOver(right);
+  var goUp = 
+    keyDown('up') || mouseIsOver(up);
+  var stopMoving = 
+   keyWentUp("left") 
+   || keyWentUp("right") 
+   || !mouseIsOver(left)
+   || !mouseIsOver(right);
+  
+  
+  if (goLeft && player.velocityX > -10) {
     player.velocityX = player.velocityX - 1;
     player.setAnimation("alienPink_walk_left");
-  } else if (keyDown("right") && player.velocityX < 10) {
+  } else if (goRight && player.velocityX < 10) {
     player.velocityX = player.velocityX + 1;
     player.setAnimation("alienPink_walk_right");
-  } else if (keyWentUp("left") || keyWentUp("right")) {
+  } else if (stopMoving) {
     player.setAnimation("alienPink_1");
   }
   
-  if (keyDown("up") && ground.displace(player)){
+  if (goUp && ground.displace(player)){
     player.velocityY = player.velocityY - 30;
     player.setAnimation("alienPink_1");
     playSound("sound://category_digital/boing_2.mp3", false);
@@ -165,4 +188,8 @@ if (portal !== undefined && player.isTouching(portal) && player.y < portal.y && 
   }
 }
 
-
+function moveArrows() {
+  left.x = camera.x - 180;
+  right.x = camera.x - 110;
+  up.x = camera.x - 145;
+}
