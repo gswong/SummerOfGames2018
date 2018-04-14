@@ -232,5 +232,4 @@ function moveArrows() {
   left.x = camera.x - 180;
   right.x = camera.x - 110;
   up.x = camera.x - 145;
-  up.zI
 }
