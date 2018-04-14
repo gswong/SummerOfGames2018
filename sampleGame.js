@@ -5,12 +5,24 @@
 // or save that for another level
 // I have also added some lovely and annoying sound for your pleasure
 
-// Variables
+// **** CONFIGS ****
+
+// Change this to false to turn on ruby giving super jumps
+var enableSuperJump = false;
+
+
+// **** VARIABLES ****
 var level = 1;
 var gravity = 1.5;
 var portal;
 
-// Create Sprites!
+
+var playerUpgrades = {
+  superJump: false,
+  // fireballs: false, etc...
+}
+
+// **** SPRITES ****
 
 // ground
 var ground = createSprite(200, 350);
@@ -27,13 +39,37 @@ player.scale = 0.7;
 createEdgeSprites();
 
 
-// Arrows (these should always be drawn last so that they aren't hidden by anything
+// gem 
+// note: for proper interaction need to crop sprite and set collider to circle
+// this will be a good thing for kids to learn
+var gem = createSprite(
+  randomNumber(0,400), 
+  randomNumber(15, enableSuperJump ? 160 : 260)
+);
+gem.setAnimation("ore_emerald_1");
+gem.scale = 0.7;
+gem.rotationSpeed = 1;
+//gem.debug = true;
+gem.setCollider("circle");
+
+// ruby (gives you a super jump)
+if (enableSuperJump) {
+  var ruby = createSprite(randomNumber(0,400), randomNumber(200,260));
+  ruby.setAnimation("ore_ruby_1");
+  ruby.scale = 0.5;
+  ruby.rotationSpeed = 1;
+  ruby.setCollider("circle");
+}
+
+// Arrows
 var left = createSprite(20, 375, 30, 20);
 var right = createSprite(90, 375, 30, 20);
 var up = createSprite(55, 360, 30, 20);
 left.setAnimation('left');
 right.setAnimation('right');
 up.setAnimation('up');
+
+// **** FUNCTIONS ****
 
 // portal 
 // this is tricky conceptually - create and return
@@ -49,15 +85,6 @@ function createPortal() {
   return portal;
 }
 
-// gem 
-// note: for proper interaction need to crop sprite and set collider to circle
-// this will be a good thing for kids to learn
-var gem = createSprite(randomNumber(0,400), randomNumber(15,260));
-gem.setAnimation("ore_emerald_1");
-gem.scale = 0.7;
-gem.rotationSpeed = 1;
-//gem.debug = true;
-gem.setCollider("circle");
 
 // Draw Loop
 // remember that order matters
@@ -72,6 +99,7 @@ function drawLevel1() {
   drawSprites();
   // must have after draw sprites 
   collectGem();
+  collectRuby();
   enterPortal();
 }
 
@@ -151,7 +179,11 @@ function playerControl(){
   }
   
   if (goUp && ground.displace(player)){
-    player.velocityY = player.velocityY - 30;
+    var jumpVelocity = 
+      enableSuperJump && !playerUpgrades.superJump 
+      ? 20
+      : 30;
+    player.velocityY = player.velocityY - jumpVelocity;
     player.setAnimation("alienPink_1");
     playSound("sound://category_digital/boing_2.mp3", false);
   }
@@ -172,7 +204,15 @@ function collectGem() {
     playSound("sound://category_instrumental/trumpet.mp3", false);
     gem.destroy(); 
     portal = createPortal();
-    
+  }
+}
+
+// When player collects a ruby destroy it and give the user superJump 
+function collectRuby() {
+  if (ruby && player.isTouching(ruby)) {
+    playSound("sound://category_instrumental/trumpet.mp3", false);
+    ruby.destroy(); 
+    playerUpgrades.superJump = true;
   }
 }
 
@@ -192,4 +232,5 @@ function moveArrows() {
   left.x = camera.x - 180;
   right.x = camera.x - 110;
   up.x = camera.x - 145;
+  up.zI
 }
