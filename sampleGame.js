@@ -5,10 +5,23 @@
 // or save that for another level
 // I have also added some lovely and annoying sound for your pleasure
 
-// variables
+// **** CONFIGS ****
+
+// Change this to false to turn on ruby giving super jumps
+var enableSuperJump = false;
+
+
+// **** VARIABLES ****
 var level = 1;
 var gravity = 1.5;
 var portal;
+
+var playerUpgrades = {
+  superJump: false,
+  // fireballs: false, etc...
+}
+
+// **** SPRITES ****
 
 // ground
 var ground = createSprite(200, 350);
@@ -24,6 +37,39 @@ player.scale = 0.7;
 // - top, bottom, left and right that prevent character from moving off screen
 createEdgeSprites();
 
+
+// gem 
+// note: for proper interaction need to crop sprite and set collider to circle
+// this will be a good thing for kids to learn
+var gem = createSprite(
+  randomNumber(0,400), 
+  randomNumber(15, enableSuperJump ? 160 : 260)
+);
+gem.setAnimation("ore_emerald_1");
+gem.scale = 0.7;
+gem.rotationSpeed = 1;
+//gem.debug = true;
+gem.setCollider("circle");
+
+// ruby (gives you a super jump)
+if (enableSuperJump) {
+  var ruby = createSprite(randomNumber(0,400), randomNumber(200,260));
+  ruby.setAnimation("ore_ruby_1");
+  ruby.scale = 0.5;
+  ruby.rotationSpeed = 1;
+  ruby.setCollider("circle");
+}
+
+// Arrows
+var left = createSprite(20, 375, 30, 20);
+var right = createSprite(90, 375, 30, 20);
+var up = createSprite(55, 360, 30, 20);
+left.setAnimation('left');
+right.setAnimation('right');
+up.setAnimation('up');
+
+// **** FUNCTIONS ****
+
 // portal 
 // this is tricky conceptually - create and return
 // note: for proper interaction need to set collider to circle
@@ -37,15 +83,6 @@ function createPortal() {
   return portal;
 }
 
-// gem 
-// note: for proper interaction need to crop sprite and set collider to circle
-// this will be a good thing for kids to learn
-var gem = createSprite(randomNumber(0,400), randomNumber(15,260));
-gem.setAnimation("ore_emerald_1");
-gem.scale = 0.7;
-gem.rotationSpeed = 1;
-//gem.debug = true;
-gem.setCollider("circle");
 
 // Draw Loop
 // remember that order matters
@@ -61,6 +98,7 @@ function drawLevel1() {
 
   // must have after draw sprites 
   collectGem();
+  collectRuby();
   enterPortal();
 }
 
@@ -86,6 +124,7 @@ function draw() {
     drawLevel2();
   }
   camera.x = player.x;
+  moveArrows();
 }
 
 // Functions
@@ -113,18 +152,35 @@ function playerGravity() {
 }
 
 function playerControl(){
-  if (keyDown("left") && player.velocityX > -10) {
+  var goLeft = 
+    keyDown('left') || mouseIsOver(left);
+  var goRight = 
+    keyDown('right') || mouseIsOver(right);
+  var goUp = 
+    keyDown('up') || mouseIsOver(up);
+  var stopMoving = 
+   keyWentUp("left") 
+   || keyWentUp("right") 
+   || !mouseIsOver(left)
+   || !mouseIsOver(right);
+  
+  
+  if (goLeft && player.velocityX > -10) {
     player.velocityX = player.velocityX - 1;
     player.setAnimation("alienPink_walk_left");
-  } else if (keyDown("right") && player.velocityX < 10) {
+  } else if (goRight && player.velocityX < 10) {
     player.velocityX = player.velocityX + 1;
     player.setAnimation("alienPink_walk_right");
-  } else if (keyWentUp("left") || keyWentUp("right")) {
+  } else if (stopMoving) {
     player.setAnimation("alienPink_1");
   }
   
-  if (keyDown("up") && ground.displace(player)){
-    player.velocityY = player.velocityY - 30;
+  if (goUp && ground.displace(player)){
+    var jumpVelocity = 
+      enableSuperJump && !playerUpgrades.superJump 
+      ? 20
+      : 30;
+    player.velocityY = player.velocityY - jumpVelocity;
     player.setAnimation("alienPink_1");
     playSound("sound://category_digital/boing_2.mp3", false);
   }
@@ -145,7 +201,15 @@ function collectGem() {
     playSound("sound://category_instrumental/trumpet.mp3", false);
     gem.destroy(); 
     portal = createPortal();
-    
+  }
+}
+
+// When player collects a ruby destroy it and give the user superJump 
+function collectRuby() {
+  if (ruby && player.isTouching(ruby)) {
+    playSound("sound://category_instrumental/trumpet.mp3", false);
+    ruby.destroy(); 
+    playerUpgrades.superJump = true;
   }
 }
 
@@ -160,4 +224,10 @@ function enterPortal() {
       }
     }
   }
+}
+
+function moveArrows() {
+  left.x = camera.x - 180;
+  right.x = camera.x - 110;
+  up.x = camera.x - 145;
 }
