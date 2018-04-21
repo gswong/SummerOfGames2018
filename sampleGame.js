@@ -5,12 +5,10 @@
 // or save that for another level
 // I have also added some lovely and annoying sound for your pleasure
 
-// Variables
+// variables
 var level = 1;
 var gravity = 1.5;
 var portal;
-
-// Create Sprites!
 
 // ground
 var ground = createSprite(200, 350);
@@ -34,7 +32,6 @@ function createPortal() {
   portal.setAnimation("lollipop_red_1");
   portal.scale = 0.7;
   portal.rotationSpeed = -5;
-  //portal.visible = false;
   //portal.debug = true;
   portal.setCollider("circle");
   return portal;
@@ -55,12 +52,13 @@ gem.setCollider("circle");
 function drawLevel1() {
   // draw the background
   background1();
+
   // update the sprites
   playerGravity();
   playerControl();
   playerLands();
-
   drawSprites();
+
   // must have after draw sprites 
   collectGem();
   enterPortal();
@@ -69,26 +67,24 @@ function drawLevel1() {
 function drawLevel2() {
   // draw the background
   background2();
+
   // update the sprites
   playerGravity();
   playerControl();
   playerLands();
-
   drawSprites();
+
   // must have after draw sprites 
   collectGem();
   enterPortal();
 }
 
-
-
 function draw() {
   if (level == 1) {
     drawLevel1();
-  } else if (level == 2){
+  } else if (level == 2) {
     drawLevel2();
   }
-  // Uncomment 
   camera.x = player.x;
 }
 
@@ -153,16 +149,15 @@ function collectGem() {
   }
 }
 
-// When player enters the portal
+// When player enters the portal destroy it and advance to next level
 function enterPortal() {
-// enter portal if touching portal
-//if (portal !== undefined && player.isTouching(portal)) {
-// you can enter portal only if you jump on top of it    
-if (portal !== undefined && player.isTouching(portal) && player.y < portal.y && player.velocityY > 0) {
-    portal.destroy();
-    playSound("sound://category_instrumental/marimba_upscale_1.mp3", false);
-    level = level + 1; 
+  if (portal !== undefined) {
+    if (player.isTouching(portal)) {
+      if (player.y < portal.y && player.velocityY > 0) {
+        portal.destroy();
+        playSound("sound://category_instrumental/marimba_upscale_1.mp3", false);
+        level = level + 1; 
+      }
+    }
   }
 }
-
-
