@@ -1,25 +1,33 @@
-// in progress - this is the first attempt to combine all the features, there are still some glitches
-// right now we have two player control functions
-// but all the sprites we've made so far are in game lab in the project with the same name: AlienAdventure: combined features
+// gamelab project AlienAdventure: combined features
 
-// refactored code from github
-// level 1: drawn background, sprite that walks, 
-// and collects gem to access portal
-// notes to us: right now, if player touches the gem, it disappears and the portal appears
-// we could have the player collect x # of gems to open the portal or something instead
-// or save that for another level
-// I have also added some lovely and annoying sound for your pleasure
+// this is the first attempt to combine all the features
+// includes all the sprites we've made so far in our projects 
 
-// this version inlcudes the superjump upgrade
-// ghost enemy
-// diamond collection - except the diamond isn't showing up.
-// 
+// right now we have two player control functions 
+// (one with arrow control and super jump, one for climbing and pushing)
+// rather than attempt to combine them, I activated them in different levels
+// still not really a two level game, but everything we developed works in some fashion
+
+// this version inlcudes:
+// original + seperately developed add ons: 
+//    ground, gravity, jumping
+// level 1: moon background, emerald gem, portal; collect emerald gem to access portal
+//    arrow keys to control movement with touch screen
+//    superjump upgrade (set config to true to activate; player gets red ruby)
+//    camera (set config to true to activate)
+//    diamond collection and text display (diamond regeneration includes delay)
+//    ghost enemy (takes away diamonds)
+//    jump on portal to access level 2
+// level 2: plain background pushing climbing and shooting work
+//    climbing - player can climb up trunk
+//    pushing - player can push cart
+//    projectile shooting (hit space bar)
 
 // **** CONFIGS ****
 
-// Change this to false to turn on ruby giving super jumps
+// Change these to true to turn on ruby giving super jumps and or turn on camera
 var enableSuperJump = false;
-
+var enableCamera = false;
 
 // **** VARIABLES ****
 var level = 1;
@@ -34,34 +42,56 @@ var diamond;
 var playerUpgrades = {
   superJump: false,
   // fireballs: false, etc...
-}
+};
 
-// **** SPRITES ****
+// **** SPRITES and GROUPS ****
+
+// tree for climbing
+var trunk = createSprite(100, 250);
+trunk.height = 400;
 
 // ground
 var ground = createSprite(200, 350);
 ground.setAnimation("greystone_1");
 ground.width = 400;
 
+// groups for pushing and climbing
+var jumpableGroup = createGroup();
+jumpableGroup.add(ground);
+
+var pushableGroup = createGroup();
+
+// cart for pushing
+var cart = createSprite(200, 260);
+cart.setCollider("rectangle",0,0, 75, 75, 0);
+cart.setAnimation("minecart_1");
+jumpableGroup.add(cart);
+pushableGroup.add(cart);
+
+// Arrows for touch and mouse control
+var left = createSprite(20, 375, 30, 20);
+var right = createSprite(90, 375, 30, 20);
+var up = createSprite(55, 360, 30, 20);
+left.setAnimation('left');
+right.setAnimation('right');
+up.setAnimation('up');
+
 // player
 var player = createSprite(200, 200);
 player.setAnimation("alienPink_1");
 player.scale = 0.7;
 
-// edge sprites: makes a group of edge sprites 
-// - top, bottom, left and right that prevent character from moving off screen
+// edge sprites: makes a group of edge sprites that prevent character from moving off screen
+// top, bottom, left and right automatically greated
 createEdgeSprites();
 
-// enemies
+// enemy
 var enemy = createSprite();
 enemy.setAnimation("ghost_green");
 enemy.scale = 0.6;
 setEnemy();
 
-
-// gem 
-// note: for proper interaction need to crop sprite and set collider to circle
-// this will be a good thing for kids to learn
+// gem that opens portal
 var gem = createSprite(
   randomNumber(0,400), 
   randomNumber(15, enableSuperJump ? 160 : 260)
@@ -81,34 +111,14 @@ if (enableSuperJump) {
   ruby.setCollider("circle");
 }
 
-// for pushing and climbing
-var jumpableGroup = createGroup();
-jumpableGroup.add(ground);
-
-var pushableGroup = createGroup();
-
-// tree for climbing
-var trunk = createSprite(100, 250);
-trunk.height = 400;
-
-var cart = createSprite(200, 260);
-cart.setCollider("rectangle",0,0, 75, 75, 0)
-cart.setAnimation("minecart_1");
-jumpableGroup.add(cart);
-pushableGroup.add(cart);
-
-
-// Arrows for control w/o mouse
-var left = createSprite(20, 375, 30, 20);
-var right = createSprite(90, 375, 30, 20);
-var up = createSprite(55, 360, 30, 20);
-left.setAnimation('left');
-right.setAnimation('right');
-up.setAnimation('up');
+// these additional sprites are created below in functions:
+//    portal
+//    diamond
+//    apple (character shoots this as a projectile)
 
 // **** FUNCTIONS ****
 
-// portal 
+// portal sprite
 // this is tricky conceptually - create and return
 // note: for proper interaction need to set collider to circle
 function createPortal() {
@@ -121,20 +131,19 @@ function createPortal() {
   return portal;
 }
 
-
-// Draw Loop
-// remember that order matters
+// ** Draw Loop functions **
+// level 1
 function drawLevel1() {
   // draw the background
   background1();
   // groups of jumpable pushable
-  maintainJumpables();
-  maintainPushables();
+  //maintainJumpables();
+  //maintainPushables();
   // print the "score"
   printDiamonds();
   // update the sprites
   playerGravity();
-  playerControl();
+  playerControl1();
   playerLands();
   // enemy
   loopEnemy();
@@ -153,7 +162,7 @@ function drawLevel1() {
   //enterPortal();
 }
 
-
+// level 2
 function drawLevel2() {
   // draw the background
   background2();
@@ -161,7 +170,7 @@ function drawLevel2() {
   maintainPushables();
   // update the sprites
   playerGravity();
-  playerControl();
+  playerControl2();
   playerLands();
   drawSprites();
 
@@ -170,30 +179,26 @@ function drawLevel2() {
   enterPortal();
 }
 
-// for diamond creation
+// general draw function
 function draw() {
+  // for diamond creation
   if (diamondExists === 0) {
     diamond = createDiamond();
   }
-  if (level == 1) {
-    drawLevel1();
-  } else if (level == 2){
-    drawLevel2();
-  }
-}
-
-// for camera 
-function draw() {
+  // for general level switching
   if (level == 1) {
     drawLevel1();
   } else if (level == 2) {
     drawLevel2();
   }
-  camera.x = player.x;
-  moveArrows();
+  // for camera 
+  if (enableCamera) {
+    camera.x = player.x;
+    moveArrows();
+  }
 }
 
-// Functions
+// ** Backgrounds **
 function background1() {
   background("RosyBrown");
   // asteroid 1
@@ -210,14 +215,15 @@ function background1() {
 }
 
 function background2(){
-  background("red");
+  background("blue");
 }
 
+// ** Player physics and interactions **
 function playerGravity() {
   player.velocityY = player.velocityY + gravity;
 }
 
-// is a above b
+// is a above b (for the jumpable)
 function above(a, b) {
   var aCenter = a.y - 0.5 * a.height;
   var bCenter = b.y - 0.5 * b.height;
@@ -227,7 +233,7 @@ function above(a, b) {
 function maintainJumpables() {
   
   if(above(player, trunk)) {
-    jumpableGroup.add(trunk)
+    jumpableGroup.add(trunk);
   } else {
     jumpableGroup.remove(trunk);
   }
@@ -248,8 +254,44 @@ function maintainPushables() {
   }
 }
 
-// playerConrol for pushing and climbing  and apple shooting
-function playerControl(){
+// player control for regular movement, arrow keys, superjump
+function playerControl1(){
+  var goLeft = 
+    keyDown('left') || mouseIsOver(left);
+  var goRight = 
+    keyDown('right') || mouseIsOver(right);
+  var goUp = 
+    keyDown('up') || mouseIsOver(up);
+  var stopMoving = 
+   keyWentUp("left") 
+   || keyWentUp("right") 
+   || !mouseIsOver(left)
+   || !mouseIsOver(right);
+  
+  
+  if (goLeft && player.velocityX > -10) {
+    player.velocityX = player.velocityX - 1;
+    player.setAnimation("alienPink_walk_left");
+  } else if (goRight && player.velocityX < 10) {
+    player.velocityX = player.velocityX + 1;
+    player.setAnimation("alienPink_walk_right");
+  } else if (stopMoving) {
+    player.setAnimation("alienPink_1");
+  }
+  
+  if (goUp && ground.displace(player)){
+    var jumpVelocity = 
+      enableSuperJump && !playerUpgrades.superJump 
+      ? 20
+      : 30;
+    player.velocityY = player.velocityY - jumpVelocity;
+    player.setAnimation("alienPink_1");
+    playSound("sound://category_digital/boing_2.mp3", false);
+  }
+}
+
+// playerConrol for pushing and climbing and apple shooting
+function playerControl2(){
   
   if(!trunk.overlap(player)) {
     climbing = false;
@@ -316,42 +358,6 @@ function playerControl(){
   
 }
 
-// player contral for regular movement + superjump
-function playerControl(){
-  var goLeft = 
-    keyDown('left') || mouseIsOver(left);
-  var goRight = 
-    keyDown('right') || mouseIsOver(right);
-  var goUp = 
-    keyDown('up') || mouseIsOver(up);
-  var stopMoving = 
-   keyWentUp("left") 
-   || keyWentUp("right") 
-   || !mouseIsOver(left)
-   || !mouseIsOver(right);
-  
-  
-  if (goLeft && player.velocityX > -10) {
-    player.velocityX = player.velocityX - 1;
-    player.setAnimation("alienPink_walk_left");
-  } else if (goRight && player.velocityX < 10) {
-    player.velocityX = player.velocityX + 1;
-    player.setAnimation("alienPink_walk_right");
-  } else if (stopMoving) {
-    player.setAnimation("alienPink_1");
-  }
-  
-  if (goUp && ground.displace(player)){
-    var jumpVelocity = 
-      enableSuperJump && !playerUpgrades.superJump 
-      ? 20
-      : 30;
-    player.velocityY = player.velocityY - jumpVelocity;
-    player.setAnimation("alienPink_1");
-    playSound("sound://category_digital/boing_2.mp3", false);
-  }
-}
-
 function playerLands(){
   edges.displace(player);
   if (ground.displace(player)) {
@@ -392,13 +398,14 @@ function enterPortal() {
   }
 }
 
+// camera control
 function moveArrows() {
   left.x = camera.x - 180;
   right.x = camera.x - 110;
   up.x = camera.x - 145;
 }
 
-
+// ** ghost enemy and diamond collection
 function setEnemy(){
   enemy.x = -25;
   enemy.y = randomNumber(15,260);
@@ -450,7 +457,7 @@ function createDiamond(){
   }
 }
 
-
+// dislpay text on screen
 function printDiamonds() {
   fill("white");
   textSize(20);
