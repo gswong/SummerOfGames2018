@@ -1,0 +1,32 @@
+* Module 1
+  + Intro to environment (game code studio)
+  + highlevel how game/processing works -- flipbook analogy
+  + canvas & coordinate system
+  + sprites creation and animation including scaling
+  + module wil introduce variables and functions
+
+* Module 2
+  + player movement (including gravity & jumping)
+  + responding to user actions
+  + introduce edge sprites
+  + introduce sprite velocity and gravity
+  + module will introduce conditional logic
+
+* Module 3
+  + portal creation
+  + sprite collision and resulting behavior
+  + enable debugging
+  + introduce concept of level and changing level
+  + collider shape and size
+
+* Additional Features
+  + enemies
+  + firing apples
+  + collecting getms
+  + score/life text on screen
+  + superjump
+  + climbing
+  + pushing
+  + camera
+  + advance hitbox
+  + falling to your death
