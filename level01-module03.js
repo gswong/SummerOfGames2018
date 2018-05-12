@@ -125,10 +125,7 @@ function playerControl(){
   }
 
   if (goUp && ground.displace(player)){
-    var jumpVelocity =
-      enableSuperJump && !playerUpgrades.superJump
-      ? 20
-      : 30;
+    var jumpVelocity = 20;
     player.velocityY = player.velocityY - jumpVelocity;
     player.setAnimation("alienPink_1");
     playSound("sound://category_digital/boing_2.mp3", false);
