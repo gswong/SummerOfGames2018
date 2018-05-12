@@ -35,29 +35,17 @@ up.setAnimation('up');
 
 // Draw Loop
 // remember that order matters
-function drawLevel1() {
-  // draw the background
-  background1();
-
-  // update the sprites
-  drawSprites();
-}
-
-// portal 
-// this is tricky conceptually - create and return
-// note: for proper interaction need to set collider to circle
-function createPortal() {
-  var portal = createSprite(350, 250);
-  portal.setAnimation("lollipop_red_1");
-  portal.scale = 0.7;
-  portal.rotationSpeed = -5;
-  portal.setCollider("circle");
-  return portal;
-}
 
 function draw() {
   drawLevel1();
+  drawSprites();
   moveArrows();
+}
+
+
+function drawLevel1() {
+  // draw the background
+  background1();
 }
 
 // Functions

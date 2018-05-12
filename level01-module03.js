@@ -1,25 +1,15 @@
-// level 1: drawn background, sprite that walks, 
-// and collects gem to access portal
-// notes to us: right now, if player touches the gem, it disappears and the portal appears
-// we could have the player collect x # of gems to open the portal or something instead
-// or save that for another level
-// I have also added some lovely and annoying sound for your pleasure
+// level 1:
+//   module 1: sprite creation
+//   module 2: player movement and gravity
+//   module 3: create portal for next level
+//   module N: extra features (gem, enemies, ladder climbing, fireballs)
 
 // **** CONFIGS ****
-
-// Change this to false to turn on ruby giving super jumps
-var enableSuperJump = false;
-
 
 // **** VARIABLES ****
 var level = 1;
 var gravity = 1.5;
 var portal;
-
-var playerUpgrades = {
-  superJump: false,
-  // fireballs: false, etc...
-}
 
 // **** SPRITES ****
 
@@ -33,32 +23,13 @@ var player = createSprite(200, 200);
 player.setAnimation("alienPink_1");
 player.scale = 0.7;
 
+// portal
+var portal = createPortal();
+
 // edge sprites: makes a group of edge sprites 
 // - top, bottom, left and right that prevent character from moving off screen
 createEdgeSprites();
 
-
-// gem 
-// note: for proper interaction need to crop sprite and set collider to circle
-// this will be a good thing for kids to learn
-var gem = createSprite(
-  randomNumber(0,400), 
-  randomNumber(15, enableSuperJump ? 160 : 260)
-);
-gem.setAnimation("ore_emerald_1");
-gem.scale = 0.7;
-gem.rotationSpeed = 1;
-//gem.debug = true;
-gem.setCollider("circle");
-
-// ruby (gives you a super jump)
-if (enableSuperJump) {
-  var ruby = createSprite(randomNumber(0,400), randomNumber(200,260));
-  ruby.setAnimation("ore_ruby_1");
-  ruby.scale = 0.5;
-  ruby.rotationSpeed = 1;
-  ruby.setCollider("circle");
-}
 
 // Arrows
 var left = createSprite(20, 375, 30, 20);
@@ -78,7 +49,6 @@ function createPortal() {
   portal.setAnimation("lollipop_red_1");
   portal.scale = 0.7;
   portal.rotationSpeed = -5;
-  //portal.debug = true;
   portal.setCollider("circle");
   return portal;
 }
@@ -86,10 +56,13 @@ function createPortal() {
 
 // Draw Loop
 // remember that order matters
-function drawLevel1() {
-  // draw the background
-  background1();
 
+function draw() {
+  if (level == 1) {
+    drawLevel1();
+  } else if (level == 2) {
+    drawLevel2();
+  }
   // update the sprites
   playerGravity();
   playerControl();
@@ -97,9 +70,15 @@ function drawLevel1() {
   drawSprites();
 
   // must have after draw sprites 
-  collectGem();
-  collectRuby();
   enterPortal();
+
+  moveArrows();
+}
+
+
+function drawLevel1() {
+  // draw the background
+  background1();
 }
 
 function drawLevel2() {
@@ -113,18 +92,7 @@ function drawLevel2() {
   drawSprites();
 
   // must have after draw sprites 
-  collectGem();
   enterPortal();
-}
-
-function draw() {
-  if (level == 1) {
-    drawLevel1();
-  } else if (level == 2) {
-    drawLevel2();
-  }
-  camera.x = player.x;
-  moveArrows();
 }
 
 // Functions
