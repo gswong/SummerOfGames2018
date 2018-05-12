@@ -19,7 +19,7 @@
   + introduce concept of level and changing level
   + collider shape and size
 
-* Additional Features
+* Additional Features (each will be optional stand alone addons to module 3)
   + enemies
   + firing apples
   + collecting getms
