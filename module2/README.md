@@ -56,6 +56,7 @@ In order to add these instructions to the draw loop in code, we need to use some
 Now we can use an if statement in gamelab to as the question *Is the user pressing the right arrow button?*
 If they are, we will move the character sprite
 
+> TODO: Explain keyDown
 
 ```js
 // TODO: Make sure this matches the code in the finished module
@@ -64,11 +65,38 @@ if (keyDown('right')) {
 }
 ```
 
+Cool! We can move the character! You may have noticed one small problem though, the character doesn't stop moving... 
 
 
+Just like how we had the instructions 
 
+> If the user is pressing the right arrow key, move the character right.
 
+We need to add the instructions 
 
+> If the user stopped pressing the right arrow key, we need to stop moving the character right.
+
+Let's add some more logic to the draw loop to accomplish this.
+
+> TODO: Explain keyWentUp
+
+To add the left key, we do the exact same thing, but we use `player.velocityX = -1` instead (to specify that the play should move left.
+
+```js
+// TODO: Make sure this matches the code in the finished module
+if (keyDown('right')) {
+  player.velocityX = 1
+}
+if (keyDown('left')) {
+  player.velocityX = -1
+}
+```
+
+Now we can move left and right!
+
+__How can we make the character jump?__
+
+> TODO: jumping
 
 
 
