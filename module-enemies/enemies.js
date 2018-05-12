@@ -30,6 +30,11 @@ var portal = createPortal();
 // - top, bottom, left and right that prevent character from moving off screen
 createEdgeSprites();
 
+// enemy
+var enemy = createSprite();
+enemy.setAnimation("ghost_green");
+enemy.scale = 0.6;
+setEnemy();
 
 // Arrows
 var left = createSprite(20, 375, 30, 20);
@@ -71,6 +76,7 @@ function draw() {
   playerGravity();
   playerControl();
   playerLands();
+  loopEnemy();
 
   // must have after draw sprites
   enterPortal();
@@ -157,3 +163,22 @@ function moveArrows() {
   right.x = camera.x - 110;
   up.x = camera.x - 145;
 }
+
+// ghost enemy
+function setEnemy(){
+  enemy.x = -25;
+  enemy.y = randomNumber(15,260);
+  enemy.velocityX = randomNumber(2,5);
+}
+
+// loop enemy back to left side of screen
+function loopEnemy(){
+  if (enemy.x > 450) {
+    setEnemy();
+  }
+
+  if (player.isTouching(enemy)) {
+    player.velocityX = 0;
+  }
+}
+
