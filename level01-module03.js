@@ -145,11 +145,9 @@ function playerLands(){
 function enterPortal() {
   if (portal !== undefined) {
     if (player.isTouching(portal)) {
-      if (player.y < portal.y && player.velocityY > 0) {
-        portal.destroy();
-        playSound("sound://category_instrumental/marimba_upscale_1.mp3", false);
-        level = level + 1;
-      }
+      portal.destroy();
+      playSound("sound://category_instrumental/marimba_upscale_1.mp3", false);
+      level = level + 1;
     }
   }
 }
