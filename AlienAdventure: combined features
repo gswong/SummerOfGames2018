@@ -1,0 +1,465 @@
+// gamelab project AlienAdventure: combined features
+
+// this is the first attempt to combine all the features
+// includes all the sprites we've made so far in our projects 
+
+// right now we have two player control functions 
+// (one with arrow control and super jump, one for climbing and pushing)
+// rather than attempt to combine them, I activated them in different levels
+// still not really a two level game, but everything we developed works in some fashion
+
+// this version inlcudes:
+// original + seperately developed add ons: 
+//    ground, gravity, jumping
+// level 1: moon background, emerald gem, portal; collect emerald gem to access portal
+//    arrow keys to control movement with touch screen
+//    superjump upgrade (set config to true to activate; player gets red ruby)
+//    camera (set config to true to activate)
+//    diamond collection and text display (diamond regeneration includes delay)
+//    ghost enemy (takes away diamonds)
+//    jump on portal to access level 2
+// level 2: plain background pushing climbing and shooting work
+//    climbing - player can climb up trunk
+//    pushing - player can push cart
+//    projectile shooting (hit space bar)
+
+// **** CONFIGS ****
+
+// Change these to true to turn on ruby giving super jumps and or turn on camera
+var enableSuperJump = false;
+var enableCamera = false;
+
+// **** VARIABLES ****
+var level = 1;
+var gravity = 1.5;
+var portal;
+// for diamond with counts
+var diamondCount = 0;
+var diamondExists = 0;
+var diamondTime = 0;
+var diamond;
+
+var playerUpgrades = {
+  superJump: false,
+  // fireballs: false, etc...
+};
+
+// **** SPRITES and GROUPS ****
+
+// tree for climbing
+var trunk = createSprite(100, 250);
+trunk.height = 400;
+
+// ground
+var ground = createSprite(200, 350);
+ground.setAnimation("greystone_1");
+ground.width = 400;
+
+// groups for pushing and climbing
+var jumpableGroup = createGroup();
+jumpableGroup.add(ground);
+
+var pushableGroup = createGroup();
+
+// cart for pushing
+var cart = createSprite(200, 260);
+cart.setCollider("rectangle",0,0, 75, 75, 0);
+cart.setAnimation("minecart_1");
+jumpableGroup.add(cart);
+pushableGroup.add(cart);
+
+// Arrows for touch and mouse control
+var left = createSprite(20, 375, 30, 20);
+var right = createSprite(90, 375, 30, 20);
+var up = createSprite(55, 360, 30, 20);
+left.setAnimation('left');
+right.setAnimation('right');
+up.setAnimation('up');
+
+// player
+var player = createSprite(200, 200);
+player.setAnimation("alienPink_1");
+player.scale = 0.7;
+
+// edge sprites: makes a group of edge sprites that prevent character from moving off screen
+// top, bottom, left and right automatically greated
+createEdgeSprites();
+
+// enemy
+var enemy = createSprite();
+enemy.setAnimation("ghost_green");
+enemy.scale = 0.6;
+setEnemy();
+
+// gem that opens portal
+var gem = createSprite(
+  randomNumber(0,400), 
+  randomNumber(15, enableSuperJump ? 160 : 260)
+);
+gem.setAnimation("ore_emerald_1");
+gem.scale = 0.7;
+gem.rotationSpeed = 1;
+//gem.debug = true;
+gem.setCollider("circle");
+
+// ruby (gives you a super jump)
+if (enableSuperJump) {
+  var ruby = createSprite(randomNumber(0,400), randomNumber(200,260));
+  ruby.setAnimation("ore_ruby_1");
+  ruby.scale = 0.5;
+  ruby.rotationSpeed = 1;
+  ruby.setCollider("circle");
+}
+
+// these additional sprites are created below in functions:
+//    portal
+//    diamond
+//    apple (character shoots this as a projectile)
+
+// **** FUNCTIONS ****
+
+// portal sprite
+// this is tricky conceptually - create and return
+// note: for proper interaction need to set collider to circle
+function createPortal() {
+  var portal = createSprite(350, 250);
+  portal.setAnimation("lollipop_red_1");
+  portal.scale = 0.7;
+  portal.rotationSpeed = -5;
+  //portal.debug = true;
+  portal.setCollider("circle");
+  return portal;
+}
+
+// ** Draw Loop functions **
+// level 1
+function drawLevel1() {
+  // draw the background
+  background1();
+  // groups of jumpable pushable
+  //maintainJumpables();
+  //maintainPushables();
+  // print the "score"
+  printDiamonds();
+  // update the sprites
+  playerGravity();
+  playerControl1();
+  playerLands();
+  // enemy
+  loopEnemy();
+
+  drawSprites();
+  // must have after draw sprites
+  
+  // for original level 1
+  collectGem();
+  collectRuby();
+  enterPortal();
+  
+  // diamond collection + enemy
+  collectDiamond();
+  enemyTouchPlayer();
+  //enterPortal();
+}
+
+// level 2
+function drawLevel2() {
+  // draw the background
+  background2();
+  maintainJumpables();
+  maintainPushables();
+  // update the sprites
+  playerGravity();
+  playerControl2();
+  playerLands();
+  drawSprites();
+
+  // must have after draw sprites 
+  collectGem();
+  enterPortal();
+}
+
+// general draw function
+function draw() {
+  // for diamond creation
+  if (diamondExists === 0) {
+    diamond = createDiamond();
+  }
+  // for general level switching
+  if (level == 1) {
+    drawLevel1();
+  } else if (level == 2) {
+    drawLevel2();
+  }
+  // for camera 
+  if (enableCamera) {
+    camera.x = player.x;
+    moveArrows();
+  }
+}
+
+// ** Backgrounds **
+function background1() {
+  background("RosyBrown");
+  // asteroid 1
+  noStroke();
+  fill("LightPink");
+  ellipse(340, 50, 80, 80);
+  fill("LightSalmon");
+  ellipse(350, 50, 10, 10);
+  ellipse(326, 78, 10, 10);
+  ellipse(320, 26, 15, 15);
+  fill("RosyBrown");
+  ellipse(300,60,20,20);
+  ellipse(366,75,30,30);
+}
+
+function background2(){
+  background("blue");
+}
+
+// ** Player physics and interactions **
+function playerGravity() {
+  player.velocityY = player.velocityY + gravity;
+}
+
+// is a above b (for the jumpable)
+function above(a, b) {
+  var aCenter = a.y - 0.5 * a.height;
+  var bCenter = b.y - 0.5 * b.height;
+  return aCenter < bCenter;
+}
+
+function maintainJumpables() {
+  
+  if(above(player, trunk)) {
+    jumpableGroup.add(trunk);
+  } else {
+    jumpableGroup.remove(trunk);
+  }
+  
+  if (above(player, cart)) {
+    jumpableGroup.add(cart);
+  } else {
+    jumpableGroup.remove(cart);
+  }
+}
+
+function maintainPushables() {
+  if (above(player, cart) || edges.displace(cart)) {
+    pushableGroup.remove(cart);
+    jumpableGroup.add(cart);
+  } else {
+    pushableGroup.add(cart);
+  }
+}
+
+// player control for regular movement, arrow keys, superjump
+function playerControl1(){
+  var goLeft = 
+    keyDown('left') || mouseIsOver(left);
+  var goRight = 
+    keyDown('right') || mouseIsOver(right);
+  var goUp = 
+    keyDown('up') || mouseIsOver(up);
+  var stopMoving = 
+   keyWentUp("left") 
+   || keyWentUp("right") 
+   || !mouseIsOver(left)
+   || !mouseIsOver(right);
+  
+  
+  if (goLeft && player.velocityX > -10) {
+    player.velocityX = player.velocityX - 1;
+    player.setAnimation("alienPink_walk_left");
+  } else if (goRight && player.velocityX < 10) {
+    player.velocityX = player.velocityX + 1;
+    player.setAnimation("alienPink_walk_right");
+  } else if (stopMoving) {
+    player.setAnimation("alienPink_1");
+  }
+  
+  if (goUp && ground.displace(player)){
+    var jumpVelocity = 
+      enableSuperJump && !playerUpgrades.superJump 
+      ? 20
+      : 30;
+    player.velocityY = player.velocityY - jumpVelocity;
+    player.setAnimation("alienPink_1");
+    playSound("sound://category_digital/boing_2.mp3", false);
+  }
+}
+
+// playerConrol for pushing and climbing and apple shooting
+function playerControl2(){
+  
+  if(!trunk.overlap(player)) {
+    climbing = false;
+  }
+  
+  if (trunk.overlap(player) && player.climbing) {
+    gravity = 0;
+  } else {
+    gravity = 1.5;
+  }
+  if (!player.climbing && keyDown("left") && player.velocityX > -10) {
+    player.facing = "left";
+    player.velocityX = player.velocityX - 1;
+    player.setAnimation("alienPink_walk_left");
+  } else if (!player.climbing && keyDown("right") && player.velocityX < 10) {
+    player.facing = "right";
+    player.velocityX = player.velocityX + 1;
+    player.setAnimation("alienPink_walk_right");
+  } else if (!player.climbing && (keyWentUp("left") || keyWentUp("right"))) {
+    player.setAnimation("alienPink_1");
+  }
+  if(!player.climbing && keyDown("up") && trunk.overlap(player) && ground.displace(player)){
+    player.climbing = true;  
+    player.setAnimation("alienPink_climb_1");
+    velocityY = -1;
+    player.play();
+  } else if (keyDown("up") && jumpableGroup.displace(player) && !trunk.overlap(player)){
+    player.velocityY = player.velocityY - 30;
+    player.setAnimation("alienPink_1");
+    playSound("sound://category_digital/boing_2.mp3", false);
+  } else if(playerClimbing = true && keyDown("down") && trunk.overlap(player)) {
+    player.play();
+    player.velocityX = 0;
+    player.velocityY = 1;
+  }else if(playerClimbing = true && keyDown("up") && trunk.overlap(player)) {
+    player.play();  
+    player.velocityX = 0;
+    player.velocityY = -1;
+  } else if (player.climbing && (keyWentUp("up") || keyWentUp("down"))) {
+    player.pause();
+    player.velocityX = 0;
+    player.velocityY = 0;
+  } else if (player.climbing && jumpableGroup.displace(player)){
+    player.climbing = false;
+  }
+  
+  if(keyWentUp("space")) {
+    apple = createSprite(player.x, player.y, 40, 40);
+    apple.setAnimation("apple_1");
+    apple.width = 40;
+    apple.height = 40;
+    
+    apple.lifetime = 180;
+    if (player.facing == "right") {
+      apple.velocityX = 5;
+      apple.rotationSpeed = 45;
+    } else {
+      apple.velocityX = -5;
+      apple.rotationSpeed = -45;
+    }
+  }
+  
+  player.displace(pushableGroup);
+  
+}
+
+function playerLands(){
+  edges.displace(player);
+  if (ground.displace(player)) {
+    player.friction = 0.2;
+  } else {
+    player.friction = 0;
+  }
+}
+
+// When player collects a gem destroy it and spawn a portal 
+function collectGem() {
+  if (player.isTouching(gem)) {
+    playSound("sound://category_instrumental/trumpet.mp3", false);
+    gem.destroy(); 
+    portal = createPortal();
+  }
+}
+
+// When player collects a ruby destroy it and give the user superJump 
+function collectRuby() {
+  if (ruby && player.isTouching(ruby)) {
+    playSound("sound://category_instrumental/trumpet.mp3", false);
+    ruby.destroy(); 
+    playerUpgrades.superJump = true;
+  }
+}
+
+// When player enters the portal destroy it and advance to next level
+function enterPortal() {
+  if (portal !== undefined) {
+    if (player.isTouching(portal)) {
+      if (player.y < portal.y && player.velocityY > 0) {
+        portal.destroy();
+        playSound("sound://category_instrumental/marimba_upscale_1.mp3", false);
+        level = level + 1; 
+      }
+    }
+  }
+}
+
+// camera control
+function moveArrows() {
+  left.x = camera.x - 180;
+  right.x = camera.x - 110;
+  up.x = camera.x - 145;
+}
+
+// ** ghost enemy and diamond collection
+function setEnemy(){
+  enemy.x = -25;
+  enemy.y = randomNumber(15,260);
+  enemy.velocityX = randomNumber(2,5);
+}
+
+// loop enemy back to left side of screen
+function loopEnemy(){
+  if (enemy.x > 450) {
+    setEnemy();
+  }
+}
+
+function enemyTouchPlayer(){
+  if(enemy.isTouching(player)){
+    setEnemy();
+    if(diamondCount >= 1){
+      diamondCount = diamondCount -1;
+    }
+  } 
+}
+
+// collecting diamonds increases diamondCount, destroys diamond
+// getting a diamond destroys it and then we pause and recreate it
+function collectDiamond() {
+  if (diamond !== undefined && player.isTouching(diamond)) {
+    //playSound("sound://category_instrumental/trumpet.mp3", false);
+    //gem.destroy(); 
+    //portal = createPortal();
+    diamondCount = diamondCount + 1;
+    diamondTime = World.seconds + 3;
+    diamond.destroy();
+    diamondExists = 0;
+    //recreateDiamond();
+  }
+}
+
+// recreates diamond after 5s pause from when last destroyed
+function createDiamond(){
+  if((World.seconds == diamondTime) && diamondExists === 0){
+    var diamond = createSprite(randomNumber(0,400),randomNumber(50,260) );
+    diamond.setAnimation("ore_diamond_1");
+    diamond.scale = 0.7;
+    diamond.rotationSpeed = 1;
+    //diamond.debug = true;
+    diamond.setCollider("circle");
+    diamondExists = 1;
+    return diamond;
+  }
+}
+
+// dislpay text on screen
+function printDiamonds() {
+  fill("white");
+  textSize(20);
+  text("Diamonds: " + diamondCount, 10, 10, 400, 20);
+}
