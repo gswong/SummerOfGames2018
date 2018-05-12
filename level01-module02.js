@@ -6,7 +6,6 @@
 
 // **** CONFIGS ****
 
-
 // **** VARIABLES ****
 var gravity = 1.5;
 
@@ -22,7 +21,7 @@ var player = createSprite(200, 200);
 player.setAnimation("alienPink_1");
 player.scale = 0.7;
 
-// edge sprites: makes a group of edge sprites 
+// edge sprites: makes a group of edge sprites
 // - top, bottom, left and right that prevent character from moving off screen
 createEdgeSprites();
 
@@ -41,7 +40,7 @@ up.setAnimation('up');
 // remember that order matters
 
 function draw() {
-  drawLevel1();
+  background1();
   drawSprites();
   moveArrows();
 
@@ -49,12 +48,6 @@ function draw() {
   playerGravity();
   playerControl();
   playerLands();
-
-}
-
-function drawLevel1() {
-  // draw the background
-  background1();
 }
 
 // Functions
@@ -78,19 +71,19 @@ function playerGravity() {
 }
 
 function playerControl(){
-  var goLeft = 
+  var goLeft =
     keyDown('left') || mouseIsOver(left);
-  var goRight = 
+  var goRight =
     keyDown('right') || mouseIsOver(right);
-  var goUp = 
+  var goUp =
     keyDown('up') || mouseIsOver(up);
-  var stopMoving = 
-   keyWentUp("left") 
-   || keyWentUp("right") 
+  var stopMoving =
+   keyWentUp("left")
+   || keyWentUp("right")
    || !mouseIsOver(left)
    || !mouseIsOver(right);
-  
-  
+
+
   if (goLeft && player.velocityX > -10) {
     player.velocityX = player.velocityX - 1;
     player.setAnimation("alienPink_walk_left");
@@ -100,10 +93,10 @@ function playerControl(){
   } else if (stopMoving) {
     player.setAnimation("alienPink_1");
   }
-  
+
   if (goUp && ground.displace(player)){
-    var jumpVelocity = 
-      enableSuperJump && !playerUpgrades.superJump 
+    var jumpVelocity =
+      enableSuperJump && !playerUpgrades.superJump
       ? 20
       : 30;
     player.velocityY = player.velocityY - jumpVelocity;
@@ -120,6 +113,7 @@ function playerLands(){
     player.friction = 0;
   }
 }
+
 function moveArrows() {
   left.x = camera.x - 180;
   right.x = camera.x - 110;

@@ -6,7 +6,6 @@
 
 // **** CONFIGS ****
 
-
 // **** VARIABLES ****
 
 
@@ -37,15 +36,9 @@ up.setAnimation('up');
 // remember that order matters
 
 function draw() {
-  drawLevel1();
+  background1();
   drawSprites();
   moveArrows();
-}
-
-
-function drawLevel1() {
-  // draw the background
-  background1();
 }
 
 // Functions
@@ -69,4 +62,3 @@ function moveArrows() {
   right.x = camera.x - 110;
   up.x = camera.x - 145;
 }
-
